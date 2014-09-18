@@ -10,16 +10,16 @@
 - hosts: video-encoders
   serial: 2
   vars:
-    source_dir: "/usr/loca/src"
+    source_dir: "/usr/local/src"
     lib_dir: "/usr/local/lib"
-    bin_dir: "/usr/loca/bin"
+    bin_dir: "/usr/local/bin"
 
   tasks:
 
   - apt: update_cache=yes cache_valid_time=3600
 
   - name: install dependencies
-    action: apt pkg=$item state=present
+    action: apt pkg={{ item }} state=present
     with_items:
       - git-core
       - autoconf 
@@ -38,83 +38,103 @@
 # Git
 
   - name: clone latest yasm
-    git: repo=git://github.com/yasm/yasm.git dest={{ source_dir }}/yasm
+    git: repo=git://github.com/yasm/yasm.git 
+         dest={{ source_dir }}/yasm 
+         accept_hostkey=yes
 
   - name: clone latest fdk-aac
     git: repo=git://github.com/mstorsjo/fdk-aac.git
-       dest={{ source_dir }}/fdk-aac
+         dest={{ source_dir }}/fdk-aac
+         accept_hostkey=yes
 
   - name: clone latest x264
     git: repo=git://git.videolan.org/x264.git
-       dest={{ source_dir }}/x264
+         dest={{ source_dir }}/x264
+         accept_hostkey=yes
 
   - name: clone latest libvpx
     git: repo=https://chromium.googlesource.com/webm/libvpx.git
-       dest={{ source_dir }}/libvpx
+         dest={{ source_dir }}/libvpx
+         accept_hostkey=yes
 
   - name: clone latest ffmpeg
     git: repo=git://source.ffmpeg.org/ffmpeg.git
-       dest={{ source_dir }}/ffmpeg
+         dest={{ source_dir }}/ffmpeg
+         accept_hostkey=yes
 
   - name: clone latest opus
     git: repo=git://git.opus-codec.org/opus.git
-       dest={{ source_dir }}/opus
+         dest={{ source_dir }}/opus
+         accept_hostkey=yes
 
 
 # Compiling
 
   - name: compile yasm 
-    command: $item chdir={{ source_dir }}/yasm creates={{ bin_dir }}/yasm
+    command: "{{ item }}"
+    args:
+      chdir: "{{ source_dir }}/yasm" 
+      creates: "{{ bin_dir }}/yasm"
     with_items:
       - ./autogen.sh
-      - ./configure --prefix={{ lib_dir }} --bindir={{ bin_dir }}
+      - ./configure --bindir={{ bin_dir }}
       - make
       - make install
       - make distclean
 
   - name: compile x264
-    environment: env
-    command: $item chdir={{ source_dir }}/x264 creates={{ bin_dir }}/x264
+    command: "{{ item }}" 
+    args:
+      chdir: "{{ source_dir }}/x264" 
+      creates: "{{ bin_dir }}/x264"
     with_items:
-      - ./configure --prefix={{ lib_dir }} --bindir={{ bin_dir }} --enable-static
+      - ./configure --bindir={{ bin_dir }} --enable-static
       - make
       - make install
       - make distclean
 
   - name: compile fdk-aac
-    command: $item chdir={{ source_dir }}/fdk-aac creates={{ lib_dir }}/lib/libfdk-aac.a
+    command: "{{ item }}" 
+    args:
+      chdir: "{{ source_dir }}/fdk-aac" 
+      creates: "{{ lib_dir }}/libfdk-aac.a"
     with_items:
       - autoreconf -fiv
-      - ./configure --prefix={{ lib_dir }} --disable-shared
+      - ./configure --disable-shared
       - make
       - make install
       - make distclean
 
   - name: compile libopus
-    command: $item chdir={{ source_dir }}/opus creates={{ lib_dir }}/lib/libopus.a
-
+    command: "{{ item }}" 
+    args:
+      chdir: "{{ source_dir }}/opus" 
+      creates: "{{ lib_dir }}/libopus.a"
     with_items:
       - ./autogen.sh
-      - ./configure --prefix={{ lib_dir }} --disable-shared
+      - ./configure --disable-shared
       - make
       - make install
       - make distclean
 
   - name: compile libvpx
-    environment: env
-    command: $item chdir={{ source_dir }}/libvpx creates={{ lib_dir }}/lib/libvpx.a
-
+    command: "{{ item }}" 
+    args:
+      chdir: "{{ source_dir }}/libvpx" 
+      creates: "{{ lib_dir }}/libvpx.a"
     with_items:
-      - ./configure --prefix={{ lib_dir }} --disable-shared
+      - ./configure --disable-shared
       - make
       - make install
       - make clean
 
   - name: compile ffmpeg
-    command: $item chdir={{ source_dir }}/ffmpeg creates={{ bin_dir }}/ffmpeg
-
+    command: "{{ item }}" 
+    args:
+      chdir: "{{ source_dir }}/ffmpeg" 
+      creates: "{{ bin_dir }}/ffmpeg"
     with_items:
-      - ./configure --extra-ldflags="-L/home/config/lib_dir/lib" --bindir={{ bin_dir }} --extra-libs=-ldl --enable-gpl --enable-libass --enable-libfdk-aac --enable-libmp3lame --enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree
+      - ./configure --bindir={{ bin_dir }} --extra-libs=-ldl --enable-gpl --enable-libass --enable-libfdk-aac --enable-libmp3lame --enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-nonfree
       - make
       - make install
       - make distclean
