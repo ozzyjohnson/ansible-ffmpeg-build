@@ -3,11 +3,14 @@ ansible-ffmpeg-build
 
 ### 2014-09-18:
 
-I've updated this playbook to work with the current version of ansible, but I don't expect to maintain it further. I've started using Docker for the system this was being applied to so anything that needs to change will happen in that configuration.
+I've updated this playbook to work with [Ansible 1.7.1](http://www.ansible.com/blog/page/9). Recently, I've started using Docker for the system this was being applied to. Find the Dockerfile and resulting image below.
 
 [Dockerfile](https://github.com/ozzyjohnson/docker-ffmpeg-webm)
 
 [Automated Build](https://registry.hub.docker.com/u/ozzyjohnson/ffmpeg-webm/)
+
+
+### Description:
 
 A simple playbook to clone and build ffmpeg + some useful codecs from source. 
 
